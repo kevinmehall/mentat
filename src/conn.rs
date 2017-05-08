@@ -185,21 +185,23 @@ mod tests {
 
         // Let's find out the next ID that'll be allocated. We're going to try to collide with it
         // a bit later.
-        let future = conn.metadata.lock().expect("metadata")
-                         .partition_map[":db.part/user"].index + 2;
-        let t = format!("[[:db/add {} :db.schema/attribute \"tempid\"]]", future);
-        let report = conn.transact(&mut sqlite, t.as_str())
-                         .expect("transact succeeded");
+        let next = conn.metadata.lock().expect("metadata")
+                       .partition_map[":db.part/user"].index;
+        let t = format!("[[:db/add {} :db.schema/attribute \"tempid\"]]", next + 1);
 
-        assert_ne!(report.tempids["tempid"], future,
-                   "we didn't allocate a tempid that would immediately collide");
+        match conn.transact(&mut sqlite, t.as_str()).unwrap_err() {
+            Error(ErrorKind::DbError(::mentat_db::errors::ErrorKind::UnrecognizedEntid(e)), _) => {
+                assert_eq!(e, next + 1);
+            },
+            x => panic!("expected EDN parse error, got {:?}", x),
+        }
 
         // Transact two more tempids.
         let t = "[[:db/add \"one\" :db.schema/attribute \"more\"]]";
         let report = conn.transact(&mut sqlite, t)
                          .expect("transact succeeded");
-        assert_ne!(report.tempids["one"], future, "we didn't advance onto an existing entid");
-        assert_ne!(report.tempids["more"], future, "we didn't advance onto an existing entid");
+        assert_eq!(report.tempids["more"], next);
+        assert_eq!(report.tempids["one"], next + 1);
     }
 
     #[test]
@@ -208,7 +210,7 @@ mod tests {
         let mut conn = Conn::connect(&mut sqlite).unwrap();
 
         // Let's find out the next ID that'll be allocated. We're going to try to collide with it.
-        let next = conn.metadata.lock().expect("metadata").partition_map[":db.part/user"].index;
+        let next = conn.metadata.lock().expect("metadata").partition_map[":db.part/user"].index + 1;
         let t = format!("[[:db/add {} :db.schema/attribute \"tempid\"]]", next);
         let report = conn.transact(&mut sqlite, t.as_str())
                          .expect("transact succeeded");

@@ -103,6 +103,14 @@ use types::{
 };
 use upsert_resolution::Generation;
 
+struct PartRanges(Vec<(i64, i64)>);
+
+impl PartRanges {
+    fn contains(&self, entid: Entid) -> bool {
+        self.0.iter().any(|&(lower, upper)| (entid >= lower) && (entid < upper))
+    }
+}
+
 /// A transaction on its way to being applied.
 #[derive(Debug)]
 pub struct Tx<'conn, 'a> {
@@ -504,12 +512,22 @@ impl<'conn, 'a> Tx<'conn, 'a> {
         /// Assertions that are :db.cardinality/many and :db.fulltext.
         let mut fts_many: Vec<db::ReducedEntity> = vec![];
 
+        // We need to ensure that callers can't blindly transact entities that haven't been
+        // allocated by this store.
+        // We do this by capturing a numeric range of acceptable entity IDs from the partition map.
+        // TODO: move this into term expansion, and check values.
+        let ranges = PartRanges(self.partition_map.values().map(|p| (p.start, p.index)).collect());
+
         // Pipeline stage 4: final terms (after rewriting) -> DB insertions.
         // Collect into non_fts_*.
         // TODO: use something like Clojure's group_by to do this.
         for term in final_terms {
             match term {
                 Term::AddOrRetract(op, e, a, v) => {
+                    if !ranges.contains(e) {
+                        bail!(ErrorKind::UnrecognizedEntid(e));
+                    }
+
                     let attribute: &Attribute = self.schema.require_attribute_for_entid(a)?;
                     if entids::might_update_metadata(a) {
                         tx_might_update_metadata = true;
