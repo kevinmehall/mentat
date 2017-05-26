@@ -82,7 +82,7 @@ pub fn run() -> i32 {
             },
             Some("-r") => {
                 last_arg = None;
-                Some(command_parser::Command::Read(arg.clone()))
+                Some(command_parser::Command::Read(vec![arg.clone()]))
             },
             Some(_) |
             None => {

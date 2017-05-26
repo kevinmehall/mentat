@@ -26,10 +26,10 @@ use command_parser::{
     Command, 
     HELP_COMMAND, 
     OPEN_COMMAND,
-    QUERY_COMMAND,
-    ALT_QUERY_COMMAND,
-    TRANSACT_COMMAND,
-    ALT_TRANSACT_COMMAND,
+    LONG_QUERY_COMMAND,
+    SHORT_QUERY_COMMAND,
+    LONG_TRANSACT_COMMAND,
+    SHORT_TRANSACT_COMMAND,
     READ_COMMAND,
 };
 use input::InputReader;
@@ -49,10 +49,10 @@ lazy_static! {
         let mut map = HashMap::new();
         map.insert(HELP_COMMAND, "Show help for commands.");
         map.insert(OPEN_COMMAND, "Open a database at path.");
-        map.insert(QUERY_COMMAND, "Execute a query against the current open database.");
-        map.insert(ALT_QUERY_COMMAND, "Shortcut for `.query`. Execute a query against the current open database.");
-        map.insert(TRANSACT_COMMAND, "Execute a transact against the current open database.");
-        map.insert(ALT_TRANSACT_COMMAND, "Shortcut for `.transact`. Execute a transact against the current open database.");
+        map.insert(LONG_QUERY_COMMAND, "Execute a query against the current open database.");
+        map.insert(SHORT_QUERY_COMMAND, "Shortcut for `.query`. Execute a query against the current open database.");
+        map.insert(LONG_TRANSACT_COMMAND, "Execute a transact against the current open database.");
+        map.insert(SHORT_TRANSACT_COMMAND, "Shortcut for `.transact`. Execute a transact against the current open database.");
         map.insert(READ_COMMAND, "Read a file containing one or more complete edn transact statements. Transacts each edn in turn.");
         map
     };

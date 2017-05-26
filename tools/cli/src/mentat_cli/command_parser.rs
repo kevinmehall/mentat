@@ -76,10 +76,10 @@ impl Command {
     pub fn output(&self) -> String {
         match self {
             &Command::Query(ref args) => {
-                format!(".{} {}", QUERY_COMMAND, args)
+                format!(".{} {}", LONG_QUERY_COMMAND, args)
             },
             &Command::Transact(ref args) => {
-                format!(".{} {}", TRANSACT_COMMAND, args)
+                format!(".{} {}", LONG_TRANSACT_COMMAND, args)
             },
             &Command::Help(ref args) => {
                 format!(".{} {:?}", HELP_COMMAND, args)
@@ -89,6 +89,9 @@ impl Command {
             }
             &Command::Close => {
                 format!(".{}", CLOSE_COMMAND)
+            },
+            &Command::Read(ref args) => {
+                format!(".{} {:?}", READ_COMMAND, args)
             },
         }
     }
